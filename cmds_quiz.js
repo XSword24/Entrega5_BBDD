@@ -1,5 +1,8 @@
 
-const {User, Quiz} = require("./model.js").models;
+const {User, Quiz, Score} = require("./model.js").models;
+const Sequelize = require("sequelize"); 
+//const Op = Sequelize.Op;
+
 
 // Show all quizzes in DB including <id> and <author>
 exports.list = async (rl) =>  {
@@ -73,6 +76,8 @@ exports.update = async (rl) => {
   rl.log(`  Quiz ${id} updated to: ${question} -> ${answer}`);
 }
 
+
+
 // Delete quiz & favourites (with relation: onDelete: 'cascade')
 exports.delete = async (rl) => {
 
@@ -82,4 +87,77 @@ exports.delete = async (rl) => {
   if (n===0) throw new Error(`  ${id} not in DB`);
   rl.log(`  ${id} deleted from DB`);
 }
+
+// Play que devuelve una pregunta random 
+let score = 0;
+
+exports.play = async (rl) => {
+  let quizzes = await Quiz.findAll();(
+    { include: [{
+        model: User,
+        as: 'author'
+      }]
+    }
+  );
+  let id= [];
+  quizzes.forEach( 
+    q =>{ id.push(q.id)}
+    
+  );
+  
+  
+ //let i = Math.floor(Math.random()* (id.length));
+ id = id.sort(() => Math.random() - 0.5);
+  
+  for(let x = 0 ; x < id.length; x++ ){
+    let m = id[x]
+  let quiz = await Quiz.findByPk(Number(m));
+  let answered = await rl.questionP(quiz.question);
+  if (answered.toLowerCase().trim()===quiz.answer.toLowerCase().trim()) {
+    rl.log(`  The answer "${answered}" is right!`);
+    score++;
+    
+  } else {
+    rl.log(`  The answer "${answered}" is wrong!`);
+    break;
+  }
+
+
+  }
+  
+  rl.log('Score: ' + score)
+  let name =await rl.questionP('Whats your name?');
+  if (!name) throw new Error("Response can't be empty!");
+  let user = await User.findOne({where: {name}});
+  let age = 0;
+    if (!user) {
+      await User.create( 
+        { name, age }
+      );
+      
+    }
+
+  //await Scores.addScore(score);
+    user = await User.findOne({where:{name}});
+  await Score.create( 
+    {wins: score,
+     userId : user.id
+    }
+  )
+
+}
+
+
+exports.score = async (rl) => {
+
+  //let users = await User.findAll();
+  let users = await User.findAll();
+  //let score = await Score.findAll();
+  
+  users.forEach( u => rl.log(`  ${u.name} Score is ${u.userId.score} `));
+  //score.forEach( u => rl.log(`  ${score.userId} Score is ${u.wins} `));
+  
+}
+
+
 

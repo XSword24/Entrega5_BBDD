@@ -1,5 +1,5 @@
 
-const {User, Quiz} = require("./model.js").models;
+const {User, Quiz,Score} = require("./model.js").models;
 
 exports.help = (rl) => 
   rl.log(
@@ -11,10 +11,12 @@ exports.help = (rl) =>
     > ru | ur | r    ## user: read (show age)
     > uu             ## user: update
     > du | ud        ## user: delete
+    > ls             ## user: score
     >
     > lq | ql | q    ## quizzes: list all
     > cq | qc        ## quiz: create
-    > tq | qt | t    ## quiz: test (play)
+    > tq | qt | t    ## quiz: test 
+    > p              ## play
     > uq | qu        ## quiz: update
     > dq | qd        ## quiz: delete
     >
@@ -32,6 +34,7 @@ exports.list = async (rl) => {
   
   users.forEach( u => rl.log(`  ${u.name} is ${u.age} years old`));
 }
+
 
 // Create user with age in the DB
 exports.create = async (rl) => {
